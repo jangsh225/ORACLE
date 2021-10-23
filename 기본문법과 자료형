@@ -1,0 +1,70 @@
+<기본 문법>
+ 1. DQL (Data Query Language) : 데이터검색(select문장)
+ 2. DML (Data Manipulation Language) : 데이터 변경/ 추가(Insert / Update / Delete)
+ 3. DDL (Data Definition Language) : DataBase 구조 정의(Create / Alter / Drop / Truncate / Rename)
+ 4. DCL (Data Control Language) : 권한지정, 제거(Grant / Revoke)
+ 5. TCL (Transaction Control Language) : 트랜잭션 처리어(Commit / Rollback / Savepoint)
+
+<자료형>
+ 1. 문자형
+  1) CHAR(size) 
+  - size 크기의 고정 길이 문자 데이터 타입
+  - 최대크기: 2,000 바이트
+  - 최소크기: 1 바이트
+  2) VARCHAR2(size)
+  - size 크기의 가변 길이 문자 데이터 타입
+  - 최대크기: 4,000 바이트
+  - 최소크기: 1 바이트
+  3) NVARCHAR2(size)
+  - 국가별 문자 집합에 따른 size 크기의 문자 또는 바이트의 가변길이 문자 데이터 타입
+  - 최대크기: 4,000 바이트
+  - 최소크기: 1 바이트
+
+ 2. 숫자형
+  1) NUMBER(p,s)
+  - 정밀도(p)와 스케일(s)로 표현되는 숫자 데이터 타입
+  - p : 1 ~ 38
+  - s : -84 ~ 127
+  
+ 3. 날짜형
+  1) DATE
+  - 날짜 형식을 저장하기 위한 데이터 타입 
+  2) TIMESTAMP(n)
+  - DATE 데이터 타입의 확장된 형태
+  - n 은 milli second 자리수로 최대 9자리까지 표현 가능
+  3) INTERVAL YEAR TO MONTH
+  - 년과 월을 이용하여 기간을 저장
+  4) INTERVAL DAY TO SECOND
+  - 일, 시, 분, 초를 이용하여 기간을 저장
+  - 두 날짜 값의 정확한 차이를 표현하는데 유용
+  
+ 4. 기타
+ 1) ROWID
+ - 테이블내 행의 고유 주소를 가지는 64진수 문자 타입
+ - 행당 6 바이트(제한된 ROWID) 또는 10 바이트(확장된 ROWID)
+ 2) BLOB
+ - 대용량의 바이너리 데이터를 저장하기 위한 데이터 타입
+ - 최대크기: 4GB
+ 3) CLOB
+ - 대용량의 텍스트 데이터를 저장하기 위한 데이터 타입
+ - 최대크기: 4GB
+ 
+ <자주 사용하는 쿼리문>
+ - desc 테이블명; 테이블 구조를 조회한다.
+ - select dstinct 컬럼명 from 테이블명; 중복데이터가 있을 경우, 중복데이터를 제외하고 조회한다.
+ - between A and B; A와 B 사이
+ - IN( A, B, C); A or B or C
+ - Like '%문자열%'; 문자열을 포함하는 모든 데이터
+ - UNION(); 두 집합을 더해서 출력, 중복 값 제거, 정렬O
+ - UNION ALL(); 두 집합을 더해서 출력, 중복 값 제거X, 정렬 X
+ - INTERSECT; 교집합
+ - MINUS; 차집합, 순서가 중요함
+ - LOWER(), UPPER(); 소문자, 대문자
+ - CONCAT(,); 문자열을 합친다
+ - SUBSTR(컬럼명, 시작점, 개수); 시작점부터 몇개의 데이터
+ - insert into 테이블명 (컬럼명1, 컬럼명2) values (값1, 값2) 
+ - alter table 테이블명 rename colunm 컬럼명 to 바꿀 컬럼명 : 컬럼명 변경
+ - 시퀀스 생성 : create sequence 시퀀스명 increment by 증분량 start with 시작값
+ --> 다음 값 시퀀스명.nextval, 현재값 시퀀스명.currval
+ - 유저명 자유롭게 생성하기 위해서 세션 변경 필요 : alter session set "_ORACLE_SCRIPT"=true;
+ - 권한 설정 : GRANT 권한명 to  USERID
