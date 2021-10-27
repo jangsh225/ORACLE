@@ -1,0 +1,149 @@
+* 관계형 데이터베이스 : 중복을 최소화, 데이터의 일관성 유지 위해 정규화 테이블을 분할 시켜놓은 게 일반적
+  분할되어 있는 테이블을 병합해서 결과를 얻어와야 원하는 결과를 얻을 수 있음
+  여러 테이블에서 검색을 하기위한 방법 : join, sub query, 집합연산
+--------------------------------------------------------------------------------------------------------
+* Join
+- 내부 조인, 외부 조인 
+- 교차 조인 (cross join)
+ex) select employee_id, email, salary, department_name from employees e, departments d;
+- 테이블 이름을 대신하는 별명을 사용가능
+- 테이블명 뒤 공백을 두고 별명 지정
+- 최대 30자 까지 가능, 짧게 쓰는 목적이라 최대한 짧게 만드는 것을 추천
+- 해당하는 sql 문장에서만 유효함
+--------------------------------------------------------------------------------------------------------
+* 일반적인 조인
+- 동등 조인(equi join)
+ex) select employee_id, email, department_name from employees, departments  -- 별칭 없을 때
+    where employees.department_id = departments.department_id;
+- 별칭이 없으면 department_id 구분하기 위해 테이블명.공동컬럼명
+ex) select employee_id, email, department_name from employees e, departments d -- 별칭 적용
+    where e.department_id = d.department_id;
+- 별칭을 사용해서 조건문을 사용
+- 별칭이 있을 경우 무조건 별칭을 사용해야함. 그렇지 않을 경우(테이블명 사용) 오류 발생
+--------------------------------------------------------------------------------------------------------
+* 자연조인(natural join)
+- 두 테이블에서 동일한 컬럼명 모두 동등조인을 처리한 결과로 조인
+- 테이블명 사이에 natural join 이라고 명시
+- where절로 조건 사용 가능
+ex) select employee_id, email, department_name, department_id from employees natural join departments
+    --where employee_id=152
+    --where department_id=80
+    order by 1;
+- employee과 departments 같은 컬럼
+- department_id, manager_id 모두 동등조인
+ex) select employee_id, email, department_name, e.department_id from employees e, departments d
+    where e.department_id = d.department_id
+    and e.manager_id = d.manager_id; -- 위의 결과와 같은 값
+--------------------------------------------------------------------------------------------------------
+* JOIN_USING : EQUI JOIN의 또다른 표현식
+- USING(컬럼명) : 조인 대상 컬럼을 USING 괄호 안에 표현
+- 두 테이블에 동일한 이름으로 정의되어야 한다.
+- USING에서 사용하고 있는 컬럼은 식별자.컬럼명으로 접근하면 오류(테이블명 or 별명)
+ex) select employee_id, email, department_id, department_name from employees JOIN departments USING (department_id)
+    where employee_id=100 --USING 적용했을 시 where 조건절 사용 가능
+    order by 1;
+--------------------------------------------------------------------------------------------------------
+* OUTER JOIN : 외부조인
+- 동등 조인 조건에서 양쪽 컬럼 값 중, 어느 하나라도 null 이면 '' equal 연산결과가 false
+- null에 해당하는 조건은 result table에 포함되지 않는다
+- null이지만 출력할 필요가 있을 때 Outer Join 사용
+- where 절에서 outer join 연산자인 (+)를 사용 -- ORACLE
+- 조인 조건문에서 NULL이 출력되는 테이블 컬럼 쪽에 (+)기호 표현
+ex) select employee_id, email, e.department_id, department_name from employees e, departments d
+    where e.department_id(+) = d.department_id
+    order by 1;
+- ANSI (right/left/full outer join ~ on)
+ex) select employee_id, email, e.department_id, department_name from employees e right outer join departments d
+    on e.department_id = d.department_id
+    order by 1;
+--------------------------------------------------------------------------------------------------------
+* self join
+- 하나의 테이블 내에 있는 컬럼끼리 연결하는 조인이 필요한 경우 사용
+- 조인 대상이 자기자신 하나라는 것 빼곤 equi join과 동일
+- where 절 FK 컬럼=PK 컬럼
+ex) select e1.employee_id, e1.email, e1.manager_id, e2.first_name from employees e1, employees e2
+    where e1.manager_id = e2.employee_id(+)
+    and e1.department_id = 100
+    order by 1;
+
+    select e1.employee_id, e1.email, e1.manager_id, e2.first_name from employees e1 left join employees e2
+    on e1.manager_id = e2.employee_id -- 조인조건
+    where e1.department_id=100 -- 특정한 검색조건은 where절 사용
+    order by 1;
+--------------------------------------------------------------------------------------------------------
+* Sub Query
+- SQL문 안에 포함된 또 다른 SQL 문을 의미한다
+- 서브쿼리의 용도는 알려지지 않은 기준을 위한 검색을 위해 사용
+- 중첩 반복문으로 생각하면 이해가 쉽다
+
+< 유형 >
+- 동작하는 방식이나 반환되는 데이터의 형태에 따라 분류
+ 1. 동작하는 방식에 따른 분류
+  1) 비연관 서브쿼리 : 서브쿼리가 메인쿼리의 컬럼을 가지고 있지 않은 형태의 쿼리,
+                      메인 쿼리에 버스쿼리에서 실행된 결과값을 제공하는 용도
+  2) 연관 서브쿼리 : 서브쿼리가 메인쿼리의 컬럼을 가지고 있는 형태
+                     메인 쿼리가 먼저 수행되어 얻은 결과가 서브쿼리의 조건에 맞는지 확인하고자 할 경우 사용
+  3) 상호연관 서브쿼리 : 메인쿼리, 서브쿼리 테이블 조건에 맞는 연관관계에 대한 것만 출력
+                        메인쿼리와 서브쿼리간의 결과를 교환하기 위하여 서브쿼리의 where 조건절에서 메인쿼리의 테이블과 연결
+                        주의사항 : 행을 비교할 때마다 결과를 메인으로 반환하는 관계로 성능이 저하될 수 있음
+     ex) 직원들 중에서 자신의 부서의 평균 연봉과 같거나 많이 받는 사람들의 이름과 직급 현재 연봉을 출력
+         select * from employees e1
+         where salary >= 
+            (select avg(salary) from employees e2 where e1.department_id = e2.department_id);
+
+ 2. 반환되는 데이터 형태에 따른 분류
+  1) 단일 행 서브쿼리 : 서브쿼리의 결과가 항상 1건 이하의 서브쿼리
+                       단일 행 비교 연산자 (=, >, <, >=, <=, !=(<>))
+     ex) 180번 사번의 사원보다 많은 급여를 받는 사원들
+          select * from employees
+          where salary >=(select salary from employees where employee_id=180);
+        
+  2) 다중 행 서브쿼리 : 서브쿼리의 결과가 2개 이상인 서브쿼리
+                       다중 행 비교 연산자 (in, all, any, exist)
+        ex) 100번 부서의 직원들의 급여보다는 더 많이 받는 사원들
+            select * from employees
+            where salary > all(select salary from employees where department_id=100);      
+        
+  3) 다중 컬럼 서브쿼리 : 서브쿼리의 결과가 여러 컬럼으로 반환되는 서브쿼리
+                         메인 쿼리의 조건절에 여러 컬럼을 동시에 비교할 때
+                         서브쿼리와 메인쿼리에서 비교하는 컬럼 개수의 위치가 동일
+        ex) 각 부서의 최고급여수령자 명단
+            select * from employees
+            where (department_id, salary) in (select department_id, max(salary) from employees group by department_id);
+          - 부서별 제일 오래된 사원의 명단
+            select * from employees
+            where (department_id, hire_date) in (select department_id, min(hire_date) from employees group by department_id);
+        
+**Sub Query 작성 시 주의 사항**
+- Sub Query 부분은 Where 절에서는 연산자 오른쪽에 위치해야 하며 반드시 괄호로 묶여야 한다
+- 특별한 경우 (Top-n 분석 등)를 제외하고는 Sub Query 절에 Order by 절이 올 수 없다
+- 단일 행 Sub Query 와 다중 행 Sub Query 에 따라 연산자를 잘 선택해야 한다
+
+--------------------------------------------------------------------------------------------------------
+* Scalar Sub Query(스칼라 서브쿼리)
+--------------------------------------------------------------------------------------------------------
+- select list 에서 서브쿼리가 사용될 때 이를 스칼라 서브쿼리라 함
+- 단일 행 결과만 리턴
+- 일치하는 데이터가 없더라도 null 값을 리턴(메인쿼리와 서브쿼리의 outer join과 동일한 결과)
+- 그룹함수의 특징 중 하나인데 스칼라 서브쿼리 또한 이 특성을 가지고 있다.
+ex) 조인관계 
+    select e.employee_id, email, department_name from employees e, departments d
+    where e.department_id = d.department_id(+)
+    order by 1;
+
+ex) 스칼라 서브쿼리 
+    select e.employee_id, email, 
+        (select department_name from departments d where d.department_id = e.department_id) 
+    from employees e
+    order by 1;
+
+--------------------------------------------------------------------------------------------------------
+* 스칼라 서브쿼리의 실행순서
+1. 메인쿼리를 수행한 후 스칼라 서브쿼리에 필요한 값을 제공
+2. 스칼라 서브쿼리를 수행하기 위해 필요한 데이터가 들어있는 블록을 메모리로 로딩
+3. 메인쿼리에서 주어진 조건을 가지고 필요한 값을 검색 후 결과를 메모리 입력값과 출력값으로 메모리 내의 
+   Query execution cache라는 곳에 저장. 입력값은 메인쿼리에서 주어진 값, 출력값은 스칼라 서브쿼리를 수행 후 나온 결과값.
+   이 값을 저장하는 캐쉬 값을 지정하는 파라미터 : _query_execution_cache_max_size
+4. 다음 조건이 메인쿼리에서 스칼라 서브쿼리로 들어오면 해쉬 함수를 이용해서 해당 값이 캐쉬에 존재하는지를 찾고
+   있으면 즉시 결과값을 출력하고 없으면 다시 다음 블록을 액세스해서 해당 값을 찾은 후 다시 메모리에 캐싱한다
+5. 메인쿼리가 끝날 때까지 반복
